@@ -4,16 +4,17 @@ import subprocess
 client = docker.from_env()
 events = client.events(decode=True)
 
-
 def get_container_host_port(container_id):
     container = client.containers.get(container_id)
-    ports = container.ports
+    attrs = container.attrs
+    ports = attrs['NetworkSettings']['Ports']
     if ports:
         for port in ports:
             return ports[port][0]['HostPort']
     return None
 
 def on_container_start(event):
+    print(event['Type'])
     if event['Type'] != 'container':
         return None
 
@@ -22,8 +23,8 @@ def on_container_start(event):
 
     container_ports = {}
     for container in client.containers.list():
-        ports = container.ports
         port = get_container_host_port(container.id)
+        print(port)
         if port != None:
             container_ports[container.name] = port
 
@@ -42,8 +43,7 @@ def on_container_start(event):
     subprocess.call(['sudo', 'nginx', '-s', 'reload'])
     print(f"nginx reload")
 try:
-    while True:
-        event = events.next()
+    for event in events:
         on_container_start(event)
 except KeyboardInterrupt:
     events.close()
