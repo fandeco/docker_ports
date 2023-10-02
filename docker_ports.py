@@ -5,13 +5,19 @@ client = docker.from_env()
 events = client.events(decode=True)
 
 def get_container_host_port(container_id):
-    container = client.containers.get(container_id)
-    attrs = container.attrs
-    ports = attrs['NetworkSettings']['Ports']
-    if ports:
-        for port in ports:
-            return ports[port][0]['HostPort']
-    return None
+     try:
+         container = client.containers.get(container_id)
+         attrs = container.attrs
+         ports = attrs['NetworkSettings']['Ports']
+         if ports:
+             for port in ports:
+                 if ports[port] != None :
+                    return ports[port][0]['HostPort']
+     except docker.errors.NotFound:
+         # Пропустить ошибку "404 Client Error: Not Found"
+         pass
+
+     return None
 
 def on_container_start(event):
     print(event['Type'])
@@ -24,7 +30,6 @@ def on_container_start(event):
     container_ports = {}
     for container in client.containers.list():
         port = get_container_host_port(container.id)
-        print(port)
         if port != None:
             container_ports[container.name] = port
 
