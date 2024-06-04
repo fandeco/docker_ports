@@ -23,6 +23,7 @@ After=network.target
 Type=simple
 ExecStart=/usr/bin/python3 /root/docker_trigger_python/docker_ports.py
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
