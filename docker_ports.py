@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import docker
 import subprocess
 client = docker.from_env()
@@ -20,7 +21,6 @@ def get_container_host_port(container_id):
      return None
 
 def on_container_start(event):
-    print(event['Type'])
     if event['Type'] != 'container':
         return None
 
@@ -44,11 +44,13 @@ def on_container_start(event):
             f.write(f"{container} {port};\n")
             count += 1
 
-    print(f"write ports containers: {count}")
+    #print(f"write ports containers: {count}")
     subprocess.call(['sudo', 'nginx', '-s', 'reload'])
-    print(f"nginx reload")
+    #print(f"nginx reload")
 try:
     for event in events:
         on_container_start(event)
-except KeyboardInterrupt:
+except Exception as e:
     events.close()
+    print(f"Unexpected error: {e}")
+    sys.exit(1)
